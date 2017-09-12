@@ -17,12 +17,27 @@ var yborder = (canvas.height-(squareSize*(Math.floor(canvas.height/squareSize)))
 var maxScore = 16;
 var squareCount = 250;
 var bonusCount = 4;
+var isInstructions = false;
 
 var player1 = new Player(xborder, "rgba(255,0,0,0.8)");
 var player2 = new Player(xborder + squareSize*Math.floor(canvas.width/squareSize-1), "rgba(0,0,255,0.8)");
 player1.init();
 player2.init();
 
+var instructions = [
+	'this is a two player game',
+	'player 1 ( red box ) can move using W,A,S and D keys',
+	'player 2 ( blue box ) can move using the \"arrow\" keys',
+	'both players starts at (0) points',
+	'a player wins if the he gets (16) or more points',
+	'(+3) points if the player could get at the other side of the map',
+	'(+1) point if a player gets a bonus item ( smiley :) )',
+	'there are also moving obstacles in the map... like a moving maze...',
+	'the player should not occupy the same block with an obstacle',
+	'or else (-1) will be added to his score, and his position will reset',
+	'both players should also have fun... :)',
+	'...',
+]
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -44,47 +59,6 @@ function generateBonuses(count) {
 		bonuses.push(new Bonus());
 	};
 }
-
-canvas.addEventListener("click", function() {
-    if (!isPlaying) {
-    	isPlaying = true;
-    }
-});
-
-window.addEventListener("keypress", function(e) {
-	if (isPlaying) {
-		if (e.keyCode == 119) {
-			player1.moveUP();
-		}
-		if (e.keyCode == 97) {
-			player1.moveLEFT();
-		}
-		if (e.keyCode == 115) {
-			player1.moveDOWN();
-		}
-		if (e.keyCode == 100) {
-			player1.moveRIGHT();
-		}
-	};
-});
-
-document.onkeydown = function(e) {
-    if (isPlaying) {
-    	e = e || window.event;
-	    if (e.keyCode == '38') {
-	        player2.moveUP();
-	    }
-	    else if (e.keyCode == '40') {
-	        player2.moveDOWN();
-	    }
-	    else if (e.keyCode == '37') {
-	       	player2.moveLEFT();
-	    }
-	    else if (e.keyCode == '39') {
-	      	player2.moveRIGHT();
-	    }
-    }
-};
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -128,6 +102,7 @@ function drawSquareLogo() {
 
 	context.beginPath();
 
+	// SQUARE
 	context.moveTo(x-100-10, y+10);
 	context.lineTo(x-150+10, y+10);
 	context.lineTo(x-150+10, y+25);
@@ -166,7 +141,7 @@ function drawSquareLogo() {
 	context.lineTo(x+100+40, y+25);
 	context.lineTo(x+100+10, y+25);
 
-	context.strokeStyle = "#fff";
+	context.strokeStyle = "#333";
 	context.lineWidth = 5;
 	context.lineCap = "round";
 	context.stroke();
@@ -175,13 +150,40 @@ function drawSquareLogo() {
 }
 
 function clearCanvas() {
-	context.fillStyle = "#000";
+	context.fillStyle = "#fff";
 	context.fillRect(0,0,canvas.width,canvas.height);
 }
 
 function drawGrid() {
-	// context.strokeStyle = "rgba(0,0,0,1)";
-	context.strokeStyle = "rgba(255,255,255,0.1)";
+
+	if (!isPlaying) {
+		context.strokeStyle = '#333';
+		context.lineWidth = 5;
+		context.lineCap = "round";
+		context.strokeRect(xborder+10, yborder+10, squareSize-20, squareSize-20);
+
+		context.fillStyle = '#333';
+		context.font = '17px Arial';
+		text = 'INSTRUCTIONS';
+		context.fillText(text, xborder*2 + squareSize, yborder + 30);
+
+		if (isInstructions) {
+			context.strokeStyle = '#aaa';
+			for (var i = 0; i < instructions.length; i++) {
+				context.strokeRect(xborder+10+50, yborder+10 + 50*(i+1), squareSize-20, squareSize-20);
+				context.font = '15px Arial';
+				context.fillText(instructions[i], xborder*2 + squareSize*2, yborder + 30 + 50*(i+1));
+			}
+		} else {
+			context.fillStyle = '#333';
+			context.font = '15px Arial';
+			text = '[   Click to Play   ]';
+			context.fillText(text, canvas.width/2 - context.measureText(text).width/2, canvas.height - 30);
+		}
+	}
+
+	context.lineWidth = 1;
+	context.strokeStyle = "rgba(0,0,0,0.2)";
 
 	context.moveTo(xborder,yborder);
 	context.lineTo(canvas.width-xborder,yborder);
@@ -301,8 +303,8 @@ function Square() {
 	}
 
 	this.draw = function() {
-		// context.fillStyle = "rgba(0,0,0,0.8)";
-		context.fillStyle = "rgba(255,255,255,0.8)";
+		context.fillStyle = "rgba(0,0,0,0.8)";
+		// context.fillStyle = "rgba(255,255,255,0.8)";
 		context.fillRect(this.x+5,this.y+5,this.dimention,this.dimention);
 	}
 }
@@ -479,3 +481,55 @@ function Bonus() {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+
+canvas.addEventListener("click", function(e) {
+	var x = e.pageX, y = e.pageY;
+    if (!isPlaying) {
+    	if (x >= xborder+10 && x <= xborder + 200 
+    		&& y >= yborder+10 && y <= yborder+10 + squareSize-20) {
+    		isInstructions = !isInstructions;
+    	}else {
+    		if (isInstructions) {
+    			isInstructions = false;
+    		} else {
+    			isInstructions = false;
+    			isPlaying = true;
+    		}
+    	}
+    }
+});
+
+window.addEventListener("keypress", function(e) {
+	if (isPlaying) {
+		if (e.keyCode == 119) {
+			player1.moveUP();
+		}
+		if (e.keyCode == 97) {
+			player1.moveLEFT();
+		}
+		if (e.keyCode == 115) {
+			player1.moveDOWN();
+		}
+		if (e.keyCode == 100) {
+			player1.moveRIGHT();
+		}
+	};
+});
+
+document.onkeydown = function(e) {
+    if (isPlaying) {
+    	e = e || window.event;
+	    if (e.keyCode == '38') {
+	        player2.moveUP();
+	    }
+	    else if (e.keyCode == '40') {
+	        player2.moveDOWN();
+	    }
+	    else if (e.keyCode == '37') {
+	       	player2.moveLEFT();
+	    }
+	    else if (e.keyCode == '39') {
+	      	player2.moveRIGHT();
+	    }
+    }
+};
